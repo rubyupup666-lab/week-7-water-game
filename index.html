@@ -1,290 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-
-  <!-- Makes the game responsive on phones, tablets, and laptops -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Build the Well Puzzle | charity: water</title>
-
-  <!-- Connects this HTML file to styles.css -->
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Build the Well Game | charity: water</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
-  <!-- 
-    Main page wrapper.
-    CSS will use this class to control the full page layout.
-  -->
-  <div class="page-wrapper">
-
-    <!-- Header section with logo, title, score, and restart button -->
-    <header class="site-header">
-      <div class="brand-area">
-        <!-- Use the existing charity: water logo image from the img folder -->
-        <img 
-          src="img/cw_logo_horizontal.png" 
-          alt="charity: water logo" 
-          class="brand-logo"
-        >
-      </div>
-
-      <div class="title-area">
-        <h1>Build the Well Puzzle</h1>
-        <p>Help bring clean water to a community.</p>
-      </div>
-
-      <div class="header-actions">
-        <div class="score-card" aria-label="Current score">
-          <span class="score-icon">💧</span>
-          <span class="score-label">Score</span>
-          <strong id="scoreDisplay">0</strong>
-        </div>
-
-        <button id="restartButton" class="secondary-button" type="button">
-          Restart
-        </button>
-      </div>
-    </header>
-
-    <!-- Top control section: Start button and progress bar -->
-    <section class="game-controls" aria-label="Game controls">
-      <button id="startButton" class="primary-button" type="button">
-        ▶ Start Game
-      </button>
-
-      <div class="progress-area">
-        <div class="progress-label-row">
-          <span>Project Progress</span>
-          <span id="progressText">0%</span>
-        </div>
-
-        <div class="progress-track" aria-label="Project progress bar">
-          <div id="progressFill" class="progress-fill"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Main game layout -->
-    <main class="game-layout">
-
-      <!-- Left information panel -->
-      <aside class="info-panel" aria-label="Game feedback">
-        <section class="message-box">
-          <h2>Message</h2>
-
-          <!-- JavaScript will update this text as the player clicks -->
-          <p id="messageText" aria-live="polite">
-            Click Start Game to begin.
-          </p>
-        </section>
-
-        <section class="success-box">
-          <div class="success-heading-row">
-            <h2>Success</h2>
-            <span class="success-star" aria-hidden="true">☆</span>
-          </div>
-
-          <!-- JavaScript will update this text after correct steps -->
-          <p id="successText">
-            Complete each step to build the well.
-          </p>
-        </section>
-
-        <section class="impact-note">
-          <span class="drop-icon" aria-hidden="true">💧</span>
-          <p>Every step brings clean water closer.</p>
-        </section>
-      </aside>
-
-      <!-- Center well building area -->
-      <section class="well-panel" aria-label="Well building area">
-        <div class="panel-heading-row">
-          <h2>Build the Well</h2>
-          <span id="stageLabel">Stage 0</span>
-        </div>
-
-        <!-- 
-          The well is made from separate HTML pieces.
-          JavaScript will show each stage one by one.
-        -->
-        <div class="well-stage" id="wellStage">
-
-          <!-- Stage 4: roof and pump -->
-          <div class="well-part well-roof" data-stage="4" aria-hidden="true">
-            <div class="roof-top"></div>
-            <div class="roof-posts">
-              <span></span>
-              <span></span>
-            </div>
-            <div class="pump-handle"></div>
-            <div class="water-drop-from-pump">💧</div>
-          </div>
-
-          <!-- Stage 3: upper well structure -->
-          <div class="well-part well-upper" data-stage="3" aria-hidden="true">
-            <div class="stone-ring small-ring"></div>
-          </div>
-
-          <!-- Stage 2: foundation -->
-          <div class="well-part well-foundation" data-stage="2" aria-hidden="true">
-            <div class="stone-ring large-ring"></div>
-          </div>
-
-          <!-- Stage 1: community base -->
-          <div class="well-part well-community active-well-part" data-stage="1">
-            <div class="community-ground">
-              <span class="house">⌂</span>
-              <span class="house">⌂</span>
-              <span class="tree">♣</span>
-              <span class="tree">♣</span>
-            </div>
-          </div>
-        </div>
-
-        <p class="well-caption" id="wellCaption">
-          The community is ready. Complete the steps to build the well.
-        </p>
-      </section>
-
-      <!-- Right instructions panel -->
-      <aside class="how-to-panel" aria-label="How to play">
-        <h2>How to Play</h2>
-
-        <ul class="how-to-list">
-          <li>
-            <span class="how-to-icon" aria-hidden="true">1</span>
-            Click the active project step.
-          </li>
-
-          <li>
-            <span class="how-to-icon" aria-hidden="true">🔒</span>
-            Complete each step to unlock the next.
-          </li>
-
-          <li>
-            <span class="how-to-icon" aria-hidden="true">⭐</span>
-            Correct step gives +25 points.
-          </li>
-
-          <li>
-            <span class="how-to-icon" aria-hidden="true">💧</span>
-            Progress increases by 25%.
-          </li>
-
-          <li>
-            <span class="how-to-icon" aria-hidden="true">🎉</span>
-            Finish all 4 steps to win.
-          </li>
-        </ul>
-      </aside>
-    </main>
-
-    <!-- Project step cards -->
-    <section class="steps-section" aria-label="Project steps">
-      <button class="step-card active-step" type="button" data-step="0">
-        <span class="step-number">1</span>
-
-        <span class="step-content">
-          <strong>Find a Community</strong>
-          <span class="step-description">Choose where clean water is needed.</span>
-        </span>
-
-        <span class="step-visual" aria-hidden="true">🏘️</span>
-        <span class="step-status">Active</span>
-      </button>
-
-      <button class="step-card locked-step" type="button" data-step="1">
-        <span class="step-number">2</span>
-
-        <span class="step-content">
-          <strong>Fund the Project</strong>
-          <span class="step-description">Help provide support for the project.</span>
-        </span>
-
-        <span class="step-visual" aria-hidden="true">🪙</span>
-        <span class="step-status">Locked</span>
-      </button>
-
-      <button class="step-card locked-step" type="button" data-step="2">
-        <span class="step-number">3</span>
-
-        <span class="step-content">
-          <strong>Build the Well</strong>
-          <span class="step-description">Construct the well piece by piece.</span>
-        </span>
-
-        <span class="step-visual" aria-hidden="true">🏗️</span>
-        <span class="step-status">Locked</span>
-      </button>
-
-      <button class="step-card locked-step" type="button" data-step="3">
-        <span class="step-number">4</span>
-
-        <span class="step-content">
-          <strong>Share the Impact</strong>
-          <span class="step-description">Celebrate clean water with others.</span>
-        </span>
-
-        <span class="step-visual" aria-hidden="true">📣</span>
-        <span class="step-status">Locked</span>
-      </button>
-    </section>
-
-    <!-- Challenge / obstacle section -->
-    <section class="challenge-section" aria-label="Challenge obstacle">
-      <div class="challenge-card">
-        <div class="challenge-text">
-          <h2>Challenge</h2>
-          <p>
-            Avoid project delays. Clicking the obstacle reduces your score by 10 points.
-          </p>
-        </div>
-
-        <button id="obstacleButton" class="obstacle-button" type="button">
-          Muddy Water Delay
-          <span aria-hidden="true">⚠️</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- Win message section -->
-    <section id="winPanel" class="win-panel hidden" aria-live="polite">
-      <div class="trophy-icon" aria-hidden="true">🏆</div>
-
-      <div>
-        <h2>Project complete! Clean water changes everything.</h2>
-        <p>
-          You brought clean water to a community in need.
-          Final Score: <strong id="finalScore">0</strong>
-        </p>
-      </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="site-footer">
-      <img 
-        src="img/water-can-transparent.png" 
-        alt="" 
-        class="footer-can"
-        aria-hidden="true"
-      >
-
+  <header class="hero">
+    <div class="hero-content">
+      <h1>Build the Well</h1>
       <p>
-        Learn more and make an impact at
-        <a href="https://www.charitywater.org/" target="_blank" rel="noopener noreferrer">
-          charitywater.org
-        </a>
+        Collect clean water drops to help a community build a well.
       </p>
-    </footer>
+    </div>
+  </header>
 
-    <!-- Confetti container.
-         JavaScript will add small confetti pieces here when the player wins. -->
-    <div id="confettiContainer" class="confetti-container" aria-hidden="true"></div>
-  </div>
+  <main class="game-container">
+    <section class="intro-card">
+      <h2>Choose Your Difficulty</h2>
+      <p>
+        Each water drop you collect helps move the community closer to clean water.
+      </p>
 
-  <!-- Connects this HTML file to script.js -->
+      <div class="difficulty-buttons">
+        <button class="difficulty-btn" data-level="easy">Easy</button>
+        <button class="difficulty-btn selected" data-level="normal">Normal</button>
+        <button class="difficulty-btn" data-level="hard">Hard</button>
+      </div>
+
+      <button id="startBtn" class="main-btn">Start Game</button>
+    </section>
+
+    <section class="stats-panel">
+      <div class="stat-box">
+        <span class="stat-label">Score</span>
+        <span id="score">0</span>
+      </div>
+
+      <div class="stat-box">
+        <span class="stat-label">Goal</span>
+        <span id="goal">15</span>
+      </div>
+
+      <div class="stat-box">
+        <span class="stat-label">Time</span>
+        <span id="timeLeft">30</span>
+      </div>
+
+      <div class="stat-box">
+        <span class="stat-label">Level</span>
+        <span id="levelText">Normal</span>
+      </div>
+    </section>
+
+    <section class="progress-section">
+      <p id="milestoneMessage">Choose a difficulty and start collecting water drops!</p>
+      <div class="progress-bar-container">
+        <div id="progressBar" class="progress-bar"></div>
+      </div>
+    </section>
+
+    <section id="gameArea" class="game-area">
+      <p id="gameHint">Water drops will appear here after you start the game.</p>
+    </section>
+
+    <section class="result-card">
+      <h2 id="resultTitle">Ready to build?</h2>
+      <p id="resultMessage">
+        Start the game and collect enough water drops before time runs out.
+      </p>
+      <button id="resetBtn" class="secondary-btn">Reset Game</button>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>
+      Learn more about charity: water’s mission:
+      <a href="https://www.charitywater.org/" target="_blank">charity: water website</a>
+      |
+      <a href="https://www.charitywater.org/donate" target="_blank">Donate clean water</a>
+    </p>
+  </footer>
+
   <script src="script.js"></script>
 </body>
 </html>
