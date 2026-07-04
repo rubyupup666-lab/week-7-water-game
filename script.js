@@ -1,365 +1,321 @@
-// Build the Well Puzzle
-// This file controls the game logic, score, progress bar, step cards,
-// obstacle penalty, restart button, and win celebration.
+// charity: water Build the Well Game
 
-document.addEventListener("DOMContentLoaded", function () {
-  // -----------------------------
-  // Get HTML elements
-  // -----------------------------
-  const startButton = document.querySelector("#startButton");
-  const restartButton = document.querySelector("#restartButton");
-  const obstacleButton = document.querySelector("#obstacleButton");
+// Difficulty settings
+const difficultySettings = {
+  easy: {
+    label: "Easy",
+    goal: 10,
+    time: 40,
+    dropSpeed: 1400,
+    dropLife: 2200,
+  },
+  normal: {
+    label: "Normal",
+    goal: 15,
+    time: 30,
+    dropSpeed: 1100,
+    dropLife: 1800,
+  },
+  hard: {
+    label: "Hard",
+    goal: 20,
+    time: 25,
+    dropSpeed: 800,
+    dropLife: 1300,
+  },
+};
 
-  const scoreDisplay = document.querySelector("#scoreDisplay");
-  const finalScore = document.querySelector("#finalScore");
+// Milestone messages array
+const milestones = [
+  {
+    percent: 25,
+    message: "Great start! Clean water is on the way.",
+  },
+  {
+    percent: 50,
+    message: "Halfway there! The well is coming together.",
+  },
+  {
+    percent: 75,
+    message: "Almost there! Keep collecting water drops.",
+  },
+  {
+    percent: 100,
+    message: "Well completed! You reached the clean water goal.",
+  },
+];
 
-  const progressText = document.querySelector("#progressText");
-  const progressFill = document.querySelector("#progressFill");
+// Get HTML elements
+const difficultyButtons = document.querySelectorAll(".difficulty-btn");
+const startBtn = document.getElementById("startBtn");
+const resetBtn = document.getElementById("resetBtn");
 
-  const messageText = document.querySelector("#messageText");
-  const successText = document.querySelector("#successText");
-  const stageLabel = document.querySelector("#stageLabel");
-  const wellCaption = document.querySelector("#wellCaption");
+const scoreDisplay = document.getElementById("score");
+const goalDisplay = document.getElementById("goal");
+const timeLeftDisplay = document.getElementById("timeLeft");
+const levelText = document.getElementById("levelText");
 
-  const stepCards = document.querySelectorAll(".step-card");
-  const wellParts = document.querySelectorAll(".well-part");
+const progressBar = document.getElementById("progressBar");
+const milestoneMessage = document.getElementById("milestoneMessage");
 
-  const winPanel = document.querySelector("#winPanel");
-  const confettiContainer = document.querySelector("#confettiContainer");
+const gameArea = document.getElementById("gameArea");
+const gameHint = document.getElementById("gameHint");
 
-  // -----------------------------
-  // Game data
-  // -----------------------------
-  const projectSteps = [
-    {
-      title: "Find a Community",
-      feedback: "Community selected.",
-      success: "Great! You found a community in need.",
-      wellCaption: "Stage 1 complete: the community has been selected.",
-      points: 25
-    },
-    {
-      title: "Fund the Project",
-      feedback: "Project funded.",
-      success: "Great! The project has funding support.",
-      wellCaption: "Stage 2 complete: the well foundation is ready.",
-      points: 25
-    },
-    {
-      title: "Build the Well",
-      feedback: "Well built.",
-      success: "Great! The well structure is now built.",
-      wellCaption: "Stage 3 complete: the well structure is standing.",
-      points: 25
-    },
-    {
-      title: "Share the Impact",
-      feedback: "Impact shared.",
-      success: "Great! The impact has been shared with others.",
-      wellCaption: "Stage 4 complete: the well is finished.",
-      points: 25
-    }
-  ];
+const resultTitle = document.getElementById("resultTitle");
+const resultMessage = document.getElementById("resultMessage");
 
-  // -----------------------------
-  // Game state variables
-  // -----------------------------
-  let gameStarted = false;
-  let gameWon = false;
-  let currentStep = 0;
-  let score = 0;
+// Sound effects
+// Create a sounds folder and add collect.mp3, miss.mp3, and win.mp3
+const collectSound = new Audio("sounds/collect.mp3");
+const missSound = new Audio("sounds/miss.mp3");
+const winSound = new Audio("sounds/win.mp3");
 
-  // -----------------------------
-  // Start the game
-  // -----------------------------
-  function startGame() {
-    if (gameStarted) {
-      messageText.textContent = "The game has already started. Complete the active step.";
+// Game state
+let currentDifficulty = "normal";
+let score = 0;
+let goal = difficultySettings.normal.goal;
+let timeLeft = difficultySettings.normal.time;
+let gameRunning = false;
+
+let dropInterval;
+let timerInterval;
+let triggeredMilestones = [];
+
+// Select difficulty
+difficultyButtons.forEach(function (button) {
+  button.addEventListener("click", function () {
+    if (gameRunning) {
       return;
     }
 
-    gameStarted = true;
-    gameWon = false;
+    difficultyButtons.forEach(function (btn) {
+      btn.classList.remove("selected");
+    });
 
-    messageText.textContent = "Game started. Click the active project step.";
-    successText.textContent = "Step 1 is active: Find a Community.";
+    button.classList.add("selected");
 
-    startButton.textContent = "Game Started";
-    startButton.disabled = true;
+    currentDifficulty = button.dataset.level;
+    applyDifficulty();
+  });
+});
 
-    updateDisplay();
+// Apply difficulty settings to page
+function applyDifficulty() {
+  const settings = difficultySettings[currentDifficulty];
+
+  goal = settings.goal;
+  timeLeft = settings.time;
+
+  goalDisplay.textContent = goal;
+  timeLeftDisplay.textContent = timeLeft;
+  levelText.textContent = settings.label;
+
+  resetStatsOnly();
+
+  milestoneMessage.textContent =
+    `${settings.label} mode selected. Collect ${goal} water drops before time runs out.`;
+}
+
+// Start game
+startBtn.addEventListener("click", function () {
+  startGame();
+});
+
+// Reset game
+resetBtn.addEventListener("click", function () {
+  resetGame();
+});
+
+// Start game function
+function startGame() {
+  if (gameRunning) {
+    return;
   }
 
-  // -----------------------------
-  // Handle step card clicks
-  // -----------------------------
-  function handleStepClick(event) {
-    const clickedCard = event.currentTarget;
-    const clickedStep = Number(clickedCard.dataset.step);
+  resetStatsOnly();
 
-    // The player must press Start first.
-    if (!gameStarted) {
-      messageText.textContent = "Click Start Game before choosing a project step.";
-      return;
+  gameRunning = true;
+  startBtn.disabled = true;
+
+  resultTitle.textContent = "Game in progress";
+  resultMessage.textContent = "Click the water drops before they disappear!";
+
+  gameHint.style.display = "none";
+
+  const settings = difficultySettings[currentDifficulty];
+
+  dropInterval = setInterval(createWaterDrop, settings.dropSpeed);
+
+  timerInterval = setInterval(function () {
+    timeLeft--;
+    timeLeftDisplay.textContent = timeLeft;
+
+    if (timeLeft <= 0) {
+      endGame(false);
     }
+  }, 1000);
+}
 
-    // The game is complete, so no more steps can be clicked.
-    if (gameWon) {
-      messageText.textContent = "The project is complete. Press Restart to play again.";
-      return;
-    }
+// Reset only game numbers
+function resetStatsOnly() {
+  score = 0;
+  triggeredMilestones = [];
 
-    // If the player clicks a step that is already complete.
-    if (clickedStep < currentStep) {
-      messageText.textContent = "That step is already complete.";
-      return;
-    }
+  scoreDisplay.textContent = score;
+  progressBar.style.width = "0%";
 
-    // If the player clicks a locked future step.
-    if (clickedStep > currentStep) {
-      messageText.textContent = "Complete the current step first.";
-      return;
-    }
+  const settings = difficultySettings[currentDifficulty];
+  timeLeft = settings.time;
+  goal = settings.goal;
 
-    // If the player clicked the correct active step.
-    completeCurrentStep();
+  goalDisplay.textContent = goal;
+  timeLeftDisplay.textContent = timeLeft;
+  levelText.textContent = settings.label;
+
+  removeAllDrops();
+}
+
+// Full reset
+function resetGame() {
+  clearInterval(dropInterval);
+  clearInterval(timerInterval);
+
+  gameRunning = false;
+  startBtn.disabled = false;
+
+  resetStatsOnly();
+
+  gameHint.style.display = "block";
+  milestoneMessage.textContent = "Choose a difficulty and start collecting water drops!";
+  resultTitle.textContent = "Ready to build?";
+  resultMessage.textContent =
+    "Start the game and collect enough water drops before time runs out.";
+}
+
+// Create water drop and add it to the DOM
+function createWaterDrop() {
+  if (!gameRunning) {
+    return;
   }
 
-  // -----------------------------
-  // Complete the current active step
-  // -----------------------------
-  function completeCurrentStep() {
-    const step = projectSteps[currentStep];
+  const drop = document.createElement("div");
+  drop.classList.add("water-drop");
 
-    score += step.points;
-    currentStep += 1;
+  const gameAreaWidth = gameArea.clientWidth;
+  const gameAreaHeight = gameArea.clientHeight;
 
-    messageText.textContent = step.feedback;
-    successText.textContent = step.success;
-    wellCaption.textContent = step.wellCaption;
+  const maxLeft = gameAreaWidth - 60;
+  const maxTop = gameAreaHeight - 60;
 
-    updateDisplay();
+  const randomLeft = Math.floor(Math.random() * maxLeft);
+  const randomTop = Math.floor(Math.random() * maxTop);
 
-    // Check if all four steps are complete.
-    if (currentStep === projectSteps.length) {
-      winGame();
-    } else {
-      const nextStep = projectSteps[currentStep];
-      successText.textContent = `${step.success} Next step unlocked: ${nextStep.title}.`;
-    }
-  }
+  drop.style.left = randomLeft + "px";
+  drop.style.top = randomTop + "px";
 
-  // -----------------------------
-  // Obstacle button logic
-  // -----------------------------
-  function handleObstacleClick() {
-    if (!gameStarted) {
-      messageText.textContent = "Start the game before facing project delays.";
+  gameArea.appendChild(drop);
+
+  let collected = false;
+
+  // Player collects the drop
+  drop.addEventListener("click", function () {
+    if (!gameRunning || collected) {
       return;
     }
 
-    if (gameWon) {
-      messageText.textContent = "The project is already complete. Press Restart to play again.";
-      return;
-    }
-
-    // Reduce the score, but do not let the score go below 0.
-    score -= 10;
-
-    if (score < 0) {
-      score = 0;
-    }
-
-    messageText.textContent = "Muddy water delay! You lost 10 points.";
-    successText.textContent = "Stay focused and keep building the project.";
-
-    updateDisplay();
-  }
-
-  // -----------------------------
-  // Update score, progress, cards, and well visuals
-  // -----------------------------
-  function updateDisplay() {
-    updateScore();
-    updateProgress();
-    updateStepCards();
-    updateWellVisual();
-  }
-
-  // -----------------------------
-  // Update score text
-  // -----------------------------
-  function updateScore() {
+    collected = true;
+    score++;
     scoreDisplay.textContent = score;
-    finalScore.textContent = score;
-  }
 
-  // -----------------------------
-  // Update progress bar
-  // -----------------------------
-  function updateProgress() {
-    const progressPercent = currentStep * 25;
+    playSound(collectSound);
 
-    progressText.textContent = `${progressPercent}%`;
-    progressFill.style.width = `${progressPercent}%`;
-    stageLabel.textContent = `Stage ${currentStep}`;
-  }
+    drop.remove();
 
-  // -----------------------------
-  // Update the step card classes and labels
-  // -----------------------------
-  function updateStepCards() {
-    stepCards.forEach(function (card) {
-      const stepIndex = Number(card.dataset.step);
-      const status = card.querySelector(".step-status");
+    updateProgress();
+    checkMilestones();
 
-      card.classList.remove("active-step", "locked-step", "completed-step");
-
-      // Before the game starts, all cards should be visually locked.
-      if (!gameStarted) {
-        card.classList.add("locked-step");
-        card.setAttribute("aria-disabled", "true");
-
-        if (stepIndex === 0) {
-          status.textContent = "Start First";
-        } else {
-          status.textContent = "Locked";
-        }
-
-        return;
-      }
-
-      // Completed steps
-      if (stepIndex < currentStep) {
-        card.classList.add("completed-step");
-        card.setAttribute("aria-disabled", "false");
-        status.textContent = "Complete";
-        return;
-      }
-
-      // Current active step
-      if (stepIndex === currentStep && !gameWon) {
-        card.classList.add("active-step");
-        card.setAttribute("aria-disabled", "false");
-        status.textContent = "Active";
-        return;
-      }
-
-      // Locked future steps
-      card.classList.add("locked-step");
-      card.setAttribute("aria-disabled", "true");
-      status.textContent = "Locked";
-    });
-  }
-
-  // -----------------------------
-  // Show well parts based on progress
-  // -----------------------------
-  function updateWellVisual() {
-    wellParts.forEach(function (part) {
-      const partStage = Number(part.dataset.stage);
-
-      if (partStage <= currentStep) {
-        part.classList.add("active-well-part");
-        part.setAttribute("aria-hidden", "false");
-      } else {
-        part.classList.remove("active-well-part");
-        part.setAttribute("aria-hidden", "true");
-      }
-    });
-
-    if (currentStep === 0) {
-      wellCaption.textContent = "No project steps completed yet. Start the game to begin building.";
+    if (score >= goal) {
+      endGame(true);
     }
-  }
-
-  // -----------------------------
-  // Win the game
-  // -----------------------------
-  function winGame() {
-    gameWon = true;
-
-    messageText.textContent = "Project complete! Clean water changes everything.";
-    successText.textContent = "You brought clean water to a community in need.";
-
-    winPanel.classList.remove("hidden");
-
-    startButton.textContent = "Project Complete";
-    startButton.disabled = true;
-
-    updateDisplay();
-    launchConfetti();
-  }
-
-  // -----------------------------
-  // Restart the game
-  // -----------------------------
-  function restartGame() {
-    gameStarted = false;
-    gameWon = false;
-    currentStep = 0;
-    score = 0;
-
-    messageText.textContent = "Click Start Game to begin.";
-    successText.textContent = "Complete each step to build the well.";
-    wellCaption.textContent = "No project steps completed yet. Start the game to begin building.";
-
-    startButton.textContent = "▶ Start Game";
-    startButton.disabled = false;
-
-    winPanel.classList.add("hidden");
-    confettiContainer.innerHTML = "";
-
-    updateDisplay();
-  }
-
-  // -----------------------------
-  // Create a simple confetti effect
-  // -----------------------------
-  function launchConfetti() {
-    confettiContainer.innerHTML = "";
-
-    const confettiColors = [
-      "#ffc907",
-      "#2e9df7",
-      "#8bd1cb",
-      "#4fcb53",
-      "#ff902a",
-      "#f16061"
-    ];
-
-    for (let i = 0; i < 45; i++) {
-      const confettiPiece = document.createElement("span");
-
-      confettiPiece.classList.add("confetti-piece");
-
-      confettiPiece.style.left = `${Math.random() * 100}%`;
-      confettiPiece.style.backgroundColor = confettiColors[i % confettiColors.length];
-      confettiPiece.style.animationDelay = `${Math.random() * 0.6}s`;
-      confettiPiece.style.animationDuration = `${2.5 + Math.random() * 1.5}s`;
-
-      confettiContainer.appendChild(confettiPiece);
-    }
-
-    // Remove confetti after the animation finishes.
-    setTimeout(function () {
-      confettiContainer.innerHTML = "";
-    }, 4500);
-  }
-
-  // -----------------------------
-  // Event listeners
-  // -----------------------------
-  startButton.addEventListener("click", startGame);
-  restartButton.addEventListener("click", restartGame);
-  obstacleButton.addEventListener("click", handleObstacleClick);
-
-  stepCards.forEach(function (card) {
-    card.addEventListener("click", handleStepClick);
   });
 
-  // -----------------------------
-  // Set the starting screen
-  // -----------------------------
-  restartGame();
-});
+  // Drop disappears if missed
+  setTimeout(function () {
+    if (!collected && drop.parentElement && gameRunning) {
+      drop.remove();
+      playSound(missSound);
+    }
+  }, difficultySettings[currentDifficulty].dropLife);
+}
+
+// Update progress bar
+function updateProgress() {
+  const progressPercent = Math.min((score / goal) * 100, 100);
+  progressBar.style.width = progressPercent + "%";
+}
+
+// Check milestone messages
+function checkMilestones() {
+  const progressPercent = (score / goal) * 100;
+
+  milestones.forEach(function (milestone) {
+    if (
+      progressPercent >= milestone.percent &&
+      !triggeredMilestones.includes(milestone.percent)
+    ) {
+      milestoneMessage.textContent = milestone.message;
+      triggeredMilestones.push(milestone.percent);
+    }
+  });
+}
+
+// End game
+function endGame(playerWon) {
+  clearInterval(dropInterval);
+  clearInterval(timerInterval);
+
+  gameRunning = false;
+  startBtn.disabled = false;
+
+  removeAllDrops();
+
+  if (playerWon) {
+    playSound(winSound);
+    resultTitle.textContent = "You built the well!";
+    resultMessage.textContent =
+      `Amazing work! You collected ${score} water drops and helped bring clean water closer to a community.`;
+    milestoneMessage.textContent =
+      "Mission complete! Clean water changes everything.";
+  } else {
+    resultTitle.textContent = "Time is up!";
+    resultMessage.textContent =
+      `You collected ${score} out of ${goal} water drops. Try again and help finish the well.`;
+    milestoneMessage.textContent =
+      "Keep going! Every drop still matters.";
+  }
+
+  gameHint.style.display = "block";
+  gameHint.textContent = "Click Start Game to try again.";
+}
+
+// Remove all water drops from the DOM
+function removeAllDrops() {
+  const drops = document.querySelectorAll(".water-drop");
+
+  drops.forEach(function (drop) {
+    drop.remove();
+  });
+}
+
+// Play sound safely
+function playSound(sound) {
+  sound.currentTime = 0;
+
+  sound.play().catch(function () {
+    // Some browsers block sound until the user interacts.
+    // This prevents the game from crashing.
+  });
+}
+
+// Load normal settings when page opens
+applyDifficulty();
