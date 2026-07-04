@@ -1,1 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
 
+  <!-- Makes the game fit phones, tablets, and laptops -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Build the Well Puzzle | charity: water</title>
+
+  <!-- Connects this file to the CSS -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div class="page-wrapper">
+
+    <!-- Header -->
+    <header class="site-header">
+      <div class="brand-area">
+        <img
+          src="img/cw_logo_horizontal.png"
+          alt="charity: water logo"
+          class="brand-logo"
+        >
+      </div>
+
+      <div class="title-area">
+        <p class="eyebrow">Clean water mission game</p>
+        <h1>Build the Well Puzzle</h1>
+        <p>Complete project steps, collect clean water drops, and help a community.</p>
+      </div>
+
+      <div class="header-actions">
+        <div class="stat-card">
+          <span>Score</span>
+          <strong id="scoreDisplay">0</strong>
+        </div>
+
+        <div class="stat-card">
+          <span>Goal</span>
+          <strong id="targetDisplay">100</strong>
+        </div>
+
+        <div class="stat-card">
+          <span>Time</span>
+          <strong id="timerDisplay">90s</strong>
+        </div>
+
+        <button id="restartButton" class="secondary-button" type="button">
+          Restart
+        </button>
+      </div>
+    </header>
+
+    <!-- Mission message -->
+    <section class="mission-banner">
+      <div>
+        <h2>Why this game matters</h2>
+        <p>
+          Each step represents part of a real clean water project:
+          finding a community, funding the work, building the well, and sharing the impact.
+        </p>
+      </div>
+
+      <img
+        src="img/water-can-transparent.png"
+        alt=""
+        class="mission-can"
+        aria-hidden="true"
+      >
+    </section>
+
+    <!-- Difficulty modes -->
+    <section class="difficulty-panel" aria-label="Choose difficulty mode">
+      <div class="section-heading-row">
+        <div>
+          <p class="eyebrow">New upgrade</p>
+          <h2>Choose Difficulty</h2>
+        </div>
+
+        <p id="difficultySummary" class="difficulty-summary">
+          Easy: 90 seconds, goal 100 points, light penalties.
+        </p>
+      </div>
+
+      <div class="difficulty-options">
+        <label class="mode-option">
+          <input type="radio" name="difficultyMode" value="easy" checked>
+          <span class="mode-card">
+            <strong>Easy</strong>
+            <span>90 seconds</span>
+            <span>Goal: 100 points</span>
+            <span>Penalty: -5</span>
+          </span>
+        </label>
+
+        <label class="mode-option">
+          <input type="radio" name="difficultyMode" value="normal">
+          <span class="mode-card">
+            <strong>Normal</strong>
+            <span>60 seconds</span>
+            <span>Goal: 120 points</span>
+            <span>Penalty: -10</span>
+          </span>
+        </label>
+
+        <label class="mode-option">
+          <input type="radio" name="difficultyMode" value="hard">
+          <span class="mode-card">
+            <strong>Hard</strong>
+            <span>45 seconds</span>
+            <span>Goal: 140 points</span>
+            <span>Penalty: -15</span>
+          </span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Game controls -->
+    <section class="game-controls" aria-label="Game controls">
+      <button id="startButton" class="primary-button" type="button">
+        ▶ Start Game
+      </button>
+
+      <div class="progress-area">
+        <div class="progress-label-row">
+          <span>Project Progress</span>
+          <span id="progressText">0%</span>
+        </div>
+
+        <div class="progress-track" aria-label="Project progress bar">
+          <div id="progressFill" class="progress-fill"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main game layout -->
+    <main class="game-layout">
+
+      <!-- Feedback panel -->
+      <aside class="info-panel" aria-label="Game feedback">
+        <section class="message-box">
+          <h2>Message</h2>
+          <p id="messageText" aria-live="polite">
+            Choose a difficulty mode, then click Start Game.
+          </p>
+        </section>
+
+        <section class="success-box">
+          <h2>Success</h2>
+          <p id="successText">
+            Complete each project step to build the well.
+          </p>
+        </section>
+
+        <section class="milestone-box">
+          <h2>Milestone</h2>
+          <p id="milestoneText">
+            Milestone messages will appear as your score grows.
+          </p>
+        </section>
+      </aside>
+
+      <!-- Well panel -->
+      <section class="well-panel" aria-label="Well building area">
+        <div class="panel-heading-row">
+          <div>
+            <p class="eyebrow">Visual progress</p>
+            <h2>Build the Well</h2>
+          </div>
+
+          <span id="stageLabel">Stage 0</span>
+        </div>
+
+        <div class="well-stage" id="wellStage">
+          <!-- Stage 4 -->
+          <div class="well-part well-roof" data-stage="4" aria-hidden="true">
+            <div class="roof-top"></div>
+            <div class="roof-posts">
+              <span></span>
+              <span></span>
+            </div>
+            <div class="pump-handle"></div>
+            <div class="water-drop-from-pump">💧</div>
+          </div>
+
+          <!-- Stage 3 -->
+          <div class="well-part well-upper" data-stage="3" aria-hidden="true">
+            <div class="stone-ring small-ring"></div>
+          </div>
+
+          <!-- Stage 2 -->
+          <div class="well-part well-foundation" data-stage="2" aria-hidden="true">
+            <div class="stone-ring large-ring"></div>
+          </div>
+
+          <!-- Stage 1 -->
+          <div class="well-part well-community" data-stage="1" aria-hidden="true">
+            <div class="community-ground">
+              <span class="house">⌂</span>
+              <span class="house">⌂</span>
+              <span class="tree">♣</span>
+              <span class="tree">♣</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="well-caption" id="wellCaption">
+          Start the game to begin building the well.
+        </p>
+
+        <!-- JavaScript will add and remove water drops here -->
+        <div class="drop-zone-wrapper">
+          <h3>Collect Clean Water Drops</h3>
+          <div id="dropZone" class="drop-zone">
+            <p class="drop-empty">Water drops will appear after each completed step.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Instructions panel -->
+      <aside class="how-to-panel" aria-label="How to play">
+        <h2>How to Play</h2>
+
+        <ul class="how-to-list">
+          <li>
+            <span class="how-to-icon">1</span>
+            Pick Easy, Normal, or Hard before starting.
+          </li>
+
+          <li>
+            <span class="how-to-icon">2</span>
+            Click the active project step in order.
+          </li>
+
+          <li>
+            <span class="how-to-icon">3</span>
+            Collect water drops for extra points.
+          </li>
+
+          <li>
+            <span class="how-to-icon">4</span>
+            Avoid or clear delay obstacles carefully.
+          </li>
+
+          <li>
+            <span class="how-to-icon">5</span>
+            Reach the score goal before time runs out.
+          </li>
+        </ul>
+      </aside>
+    </main>
+
+    <!-- Project step cards -->
+    <section class="steps-section" aria-label="Project steps">
+      <button class="step-card active-step" type="button" data-step="0">
+        <span class="step-number">1</span>
+
+        <span class="step-content">
+          <strong>Find a Community</strong>
+          <span class="step-description">Choose where clean water is needed.</span>
+        </span>
+
+        <span class="step-visual" aria-hidden="true">🏘️</span>
+        <span class="step-status">Start First</span>
+      </button>
+
+      <button class="step-card locked-step" type="button" data-step="1">
+        <span class="step-number">2</span>
+
+        <span class="step-content">
+          <strong>Fund the Project</strong>
+          <span class="step-description">Help provide support for the project.</span>
+        </span>
+
+        <span class="step-visual" aria-hidden="true">🪙</span>
+        <span class="step-status">Locked</span>
+      </button>
+
+      <button class="step-card locked-step" type="button" data-step="2">
+        <span class="step-number">3</span>
+
+        <span class="step-content">
+          <strong>Build the Well</strong>
+          <span class="step-description">Construct the well piece by piece.</span>
+        </span>
+
+        <span class="step-visual" aria-hidden="true">🏗️</span>
+        <span class="step-status">Locked</span>
+      </button>
+
+      <button class="step-card locked-step" type="button" data-step="3">
+        <span class="step-number">4</span>
+
+        <span class="step-content">
+          <strong>Share the Impact</strong>
+          <span class="step-description">Celebrate clean water with others.</span>
+        </span>
+
+        <span class="step-visual" aria-hidden="true">📣</span>
+        <span class="step-status">Locked</span>
+      </button>
+    </section>
+
+    <!-- Obstacle section -->
+    <section class="challenge-section" aria-label="Delay obstacles">
+      <div class="challenge-card">
+        <div class="challenge-text">
+          <p class="eyebrow">Challenge</p>
+          <h2>Project Delays</h2>
+          <p>
+            Delay obstacles can appear after project steps.
+            Click a delay to clear it, but it will reduce your score.
+          </p>
+        </div>
+
+        <div id="obstacleZone" class="obstacle-zone">
+          <p class="obstacle-empty">No delays yet.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Win panel -->
+    <section id="winPanel" class="win-panel hidden" aria-live="polite">
+      <div class="trophy-icon" aria-hidden="true">🏆</div>
+
+      <div>
+        <p class="eyebrow">Project complete</p>
+        <h2>Clean water changes everything.</h2>
+        <p>
+          Final Score:
+          <strong id="finalScore">0</strong>
+          |
+          Mode:
+          <strong id="finalMode">Easy</strong>
+          |
+          Time Left:
+          <strong id="finalTime">0s</strong>
+        </p>
+        <p id="finalMilestone">
+          You helped bring clean water closer to a community.
+        </p>
+      </div>
+    </section>
+
+    <!-- Footer with charity: water links -->
+    <footer class="site-footer">
+      <img
+        src="img/water-can-transparent.png"
+        alt=""
+        class="footer-can"
+        aria-hidden="true"
+      >
+
+      <p>
+        Learn more at
+        <a href="https://www.charitywater.org/" target="_blank" rel="noopener noreferrer">
+          charitywater.org
+        </a>
+        or support clean water through the
+        <a href="https://www.charitywater.org/donate" target="_blank" rel="noopener noreferrer">
+          donation page
+        </a>.
+      </p>
+    </footer>
+
+    <!-- JavaScript will add confetti pieces here -->
+    <div id="confettiContainer" class="confetti-container" aria-hidden="true"></div>
+  </div>
+
+  <!-- Connects this file to JavaScript -->
+  <script src="script.js"></script>
+</body>
+</html>
